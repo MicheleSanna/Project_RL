@@ -62,8 +62,6 @@ class Evaluation(object):
 
         wins = self.calc_score()
 
-        print("Time Elapsed: " + str(time.time() - self.start))
-
         return wins
 
     def distribute_cards(self):
@@ -321,11 +319,6 @@ class Evaluation(object):
         # print('My Wins \n {}'.format(MyWins))
 
         return MyWins / self.iterations
-
-
-#
-# winPercent = E.run_evaluation(card1=[9, 0], card2=[2, 1], tablecards=[[5, 3], [3, 2]], iterations=10000,
-#                               player_amount=3)
 
 # print(winPercent)
 
