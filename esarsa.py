@@ -1,7 +1,7 @@
 import numpy as np
 
 class ESARSA():
-    def __init__(self, space_size, action_size, n_axis, gamma=1, lr_v=0):
+    def __init__(self, space_size, action_size, gamma=1, lr_v=0):
         self.gamma = gamma
         self.lr_v = lr_v
         self.QValues = np.zeros((*space_size, action_size))

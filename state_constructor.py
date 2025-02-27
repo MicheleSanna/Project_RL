@@ -9,25 +9,29 @@ calculator = cppimport.imp("tools.montecarlo_cpp.pymontecarlo")
 E = Evaluation()
 
 class StateConstructor():
-    def __init__(self, equity_bins, pot_bins, players_in_game, raise_bins, stack_bins, n_workers=4):
+    def __init__(self, equity_bins, pot_bins, raise_bins, big_blind, initial_stack, n_workers=4):
         self.equity_bins = equity_bins
         self.pot_bins = pot_bins
-        self.players_in_game = players_in_game
         self.raise_bins = raise_bins
-        self.stack_bins = stack_bins
         self.Evaluator = Evaluation()
+        self.big_blind_inv = 1/big_blind
+        self.initial_stack_inv = 1/initial_stack
         self.pool = Pool(n_workers)
         self.equity=None
         self.last_game_phase=None
 
 
     def construct_state(self, state_dict, current_player):
+        stack = state_dict['seats'][current_player]['stack']
         game_phase = state_dict['current_round']
+        player_bet = state_dict['seats'][current_player]['current_bet']
+        adv_bet = state_dict['seats'][current_player - 1]['current_bet']
         match game_phase:
             case 0:
                 tablecards = []
-                self.last_game_phase = game_phase
-                self.equity = 0.33
+                #self.last_game_phase = game_phase
+                #self.equity = 0
+                iterations = 500
             case 1:
                 tablecards = state_dict['board_2d'][:3]
                 iterations = 2000
@@ -38,36 +42,22 @@ class StateConstructor():
                 tablecards = state_dict['board_2d'][:5]
                 iterations = 1000
 
-        pot = state_dict['main_pot']
-        pot_idx = self.get_bin_index(pot, self.pot_bins)
+        pot = state_dict['main_pot'] 
+        pot_idx = self.get_bin_index((pot / stack) if stack != 0 else 999  , self.pot_bins)
 
-        max_bet = max([state_dict['seats'][0]['current_bet'], state_dict['seats'][1]['current_bet'], state_dict['seats'][2]['current_bet']])
-        call = state_dict['seats'][current_player]['current_bet'] - max_bet
-        call_idx = self.get_bin_index(call, self.raise_bins)
-
-        stack = state_dict['seats'][current_player]['stack']
-        stack_idx = self.get_bin_index(stack, self.stack_bins)
+        
+        norm_call = ((adv_bet - player_bet) / (pot + adv_bet + player_bet) ) if adv_bet != 0 else 0
+        #print(f"Call: {norm_call} ({state_dict['seats'][current_player - 1]['current_bet'] - state_dict['seats'][current_player]['current_bet']}), Pot: {pot}")
+        call_idx = self.get_bin_index(norm_call, self.raise_bins)
 
         if game_phase != self.last_game_phase:
             self.calculate_equity(tablecards, state_dict['seats'][current_player]['hand'], iterations)
         
         equity_idx = self.get_bin_index(self.equity, self.equity_bins)
-
-        if state_dict['seats'][current_player]['folded_this_episode']:
-            players_in_game = 0
-        elif state_dict['seats'][current_player-1]['folded_this_episode'] and state_dict['seats'][(current_player + 1) % 3]['folded_this_episode']:
-            players_in_game = 1
-        elif state_dict['seats'][current_player-1]['folded_this_episode']:
-            players_in_game = 2
-        elif state_dict['seats'][(current_player + 1) % 3]['folded_this_episode']:
-            players_in_game = 3
-        else:
-            players_in_game = 4
         self.last_game_phase = game_phase
-
-        return np.array([equity_idx, pot_idx, call_idx, stack_idx, game_phase, players_in_game])
+        return np.array([equity_idx, pot_idx, call_idx, game_phase])
     
-    def calculate_equity(self, tablecards, hand, iterations, nplayers=3):
+    def calculate_equity(self, tablecards, hand, iterations, nplayers=2):
         args_list = [{"card1": hand[0], "card2": hand[1], "tablecards": tablecards, "iterations": iterations, "player_amount": nplayers}] * 4
         self.equity = sum(self.pool.map(run_evaluation_wrapper, args_list))*0.25
     
