@@ -1,15 +1,17 @@
 import numpy as np
 from tools.montecarlo_numpy2 import Evaluation
-import cppimport
+#import cppimport
+import torch
 import time
 from multiprocessing import Pool
 from multiprocessing import Process, Queue
 
-calculator = cppimport.imp("tools.montecarlo_cpp.pymontecarlo")
+#calculator = cppimport.imp("tools.montecarlo_cpp.pymontecarlo")
 E = Evaluation()
 
 class StateConstructor():
-    def __init__(self, equity_bins, pot_bins, raise_bins, big_blind, initial_stack, n_workers=4):
+    def __init__(self, equity_bins, pot_bins, raise_bins, big_blind, initial_stack, n_workers=4, device='cpu'):
+        self.device = device
         self.equity_bins = equity_bins
         self.pot_bins = pot_bins
         self.raise_bins = raise_bins
@@ -18,10 +20,43 @@ class StateConstructor():
         self.initial_stack_inv = 1/initial_stack
         self.pool = Pool(n_workers)
         self.equity=None
-        self.last_game_phase=None
+        self.last_game_phase=None  
 
 
-    def construct_state(self, state_dict, current_player):
+    def construct_state_continuous(self, state_dict, current_player):
+        stack = state_dict['seats'][current_player]['stack']
+        game_phase = state_dict['current_round']
+        player_bet = state_dict['seats'][current_player]['current_bet']
+        adv_bet = state_dict['seats'][current_player - 1]['current_bet']
+        pot = state_dict['main_pot']
+        
+        match game_phase:
+            case 0:
+                tablecards = []
+                iterations = 500
+            case 1:
+                tablecards = state_dict['board_2d'][:3]
+                iterations = 2000
+            case 2:
+                tablecards = state_dict['board_2d'][:4]
+                iterations = 1500
+            case 3:
+                tablecards = state_dict['board_2d'][:5]
+                iterations = 1000
+        
+        if game_phase != self.last_game_phase:
+            self.calculate_equity(tablecards, state_dict['seats'][current_player]['hand'], iterations)
+        
+        norm_call = ((adv_bet - player_bet) / (pot + adv_bet + player_bet) ) if adv_bet != 0 else 0
+        state_array = torch.tensor([0, 0, 0, 0, self.equity, pot * self.initial_stack_inv, stack * self.initial_stack_inv, norm_call], dtype=torch.float32, device=self.device)
+        
+        state_array[game_phase] = 1
+        self.last_game_phase = game_phase
+        
+        return state_array.unsqueeze(0)
+    
+    
+    def construct_state_bin(self, state_dict, current_player):
         stack = state_dict['seats'][current_player]['stack']
         game_phase = state_dict['current_round']
         player_bet = state_dict['seats'][current_player]['current_bet']
@@ -74,12 +109,12 @@ class StateConstructor():
         
 
             
-def _runner(my_cards, cards_on_table, players, iterations=5000):
-     """Montecarlo test"""
+"""def _runner(my_cards, cards_on_table, players, iterations=5000):
+     #Montecarlo test
      if len(cards_on_table) < 3:
          cards_on_table = {'null'}
      equity = calculator.montecarlo(my_cards, cards_on_table, players, iterations) 
-     print("EQ: ", equity)
+     print("EQ: ", equity)"""
 
 def run_evaluation_wrapper(args):
     return E.run_evaluation(**args)

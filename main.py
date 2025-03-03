@@ -58,8 +58,8 @@ if __name__ == '__main__':
                                 starting_stack_sizes_list=[300] * 2)
     env = NoLimitHoldem(is_evaluating=False, env_args=args, lut_holder=NoLimitHoldem.get_lut_holder())
     player = StaticRandomPlayer()
-    state_constructor = StateConstructor(equity_bins=[0.2, 0.4, 0.5, 0.6, 0.8, 1], 
-                                         pot_bins=[0, 0.05, 0.1, 0.2, 0.4, 0.8, 9999], 
+    state_constructor = StateConstructor(equity_bins=[0.25, 0.5, 0.75, 1], 
+                                         pot_bins=[0.05, 0.1, 0.2, 0.4, 0.8, 9999], 
                                          raise_bins=[0, 0.1, 0.5, 1, 3, 9999], 
                                          big_blind=100, 
                                          initial_stack=10000, 
@@ -81,7 +81,7 @@ if __name__ == '__main__':
                 print(f"Step: {i}, reward of last 100: {episode_reward[feet-1]}, time elapsed: {time.time()-start}")
         done = False
         env.reset()
-        state = state_constructor.construct_state(env.state_dict(), 0)
+        state = state_constructor.construct_state_bin(env.state_dict(), 0)
         action = e_sarsa.get_action_epsilon_greedy(state, 0.1)
         new_state = state
         new_action = action
@@ -91,19 +91,23 @@ if __name__ == '__main__':
             _, reward, done, a = env.step(get_action(state_dict['main_pot'], new_action))
             
             state_dict = env.state_dict()
-            
+            #print("--------------------------------------")
+            #print(state_dict)
             if state_dict['current_player'] == 0:
-                new_state = state_constructor.construct_state(state_dict, 0)
+                new_state = state_constructor.construct_state_bin(state_dict, 0)
                 new_action = e_sarsa.get_action_epsilon_greedy(new_state, 0.1)
                 e_sarsa.single_step_update(state, action, reward[0], new_state, done, 0.1)
+                #print("SARSA PLAYER ACTION: ", new_action)
+                state = new_state
+                action = new_action
             else:
-                action_space = env.get_legal_actions()
                 new_action = random.choices([0, 1, 2, 3, 4, 5, 6, 7], [0.1, 2, 1, 0.5, 0.1, 0.05, 0.02, 0.01])[0]
+                #print("RANDOM PLAYER ACTION: ", new_action)
 
-            state = new_state
-            action = new_action
+            
  
     print("Time elapsed: ", time.time()-start)
+    e_sarsa.save("QValues.npy")
     plt.plot(episode_reward)
     plt.xlabel('Episode (x100)')
     plt.ylabel('Reward')

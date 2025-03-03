@@ -1,7 +1,7 @@
 import numpy as np
 
 class ESARSA():
-    def __init__(self, space_size, action_size, gamma=1, lr_v=0):
+    def __init__(self, space_size, action_size, gamma=1, lr_v=0.01):
         self.gamma = gamma
         self.lr_v = lr_v
         self.QValues = np.zeros((*space_size, action_size))
@@ -43,3 +43,9 @@ class ESARSA():
         best_actions = (self.QValues[(*s,)] == best_value)
         policy += best_actions / np.sum(best_actions) * (1 - eps)
         return policy
+    
+    def save(self, path):
+        np.save(path, self.QValues)
+
+    def load(self, path):
+        self.QValues = np.load(path)
