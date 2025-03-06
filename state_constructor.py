@@ -28,7 +28,7 @@ class StateConstructor():
         game_phase = state_dict['current_round']
         player_bet = state_dict['seats'][current_player]['current_bet']
         adv_bet = state_dict['seats'][current_player - 1]['current_bet']
-        pot = state_dict['main_pot']
+        pot = state_dict['main_pot'] + player_bet + adv_bet
         
         match game_phase:
             case 0:
@@ -47,7 +47,7 @@ class StateConstructor():
         if game_phase != self.last_game_phase:
             self.calculate_equity(tablecards, state_dict['seats'][current_player]['hand'], iterations)
         
-        norm_call = ((adv_bet - player_bet) / (pot + adv_bet + player_bet) ) if adv_bet != 0 else 0
+        norm_call = ((adv_bet - player_bet) * self.initial_stack_inv ) 
         state_array = torch.tensor([0, 0, 0, 0, self.equity, pot * self.initial_stack_inv, stack * self.initial_stack_inv, norm_call], dtype=torch.float32, device=self.device)
         
         state_array[game_phase] = 1

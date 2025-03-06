@@ -49,7 +49,7 @@ class DQN(nn.Module):
     
 
 class QNetworkAgent():
-    def __init__(self, device, n_observations, n_actions, batch_size, gamma, eps_start, eps_end, eps_decay, tau, lr, action_space = gymnasium.spaces.discrete.Discrete(8)):
+    def __init__(self, device, n_observations, n_actions, replay_memory_size, batch_size, gamma, eps_start, eps_end, eps_decay, tau, lr):
         self.device = device
         self.n_observations = n_observations
         self.n_actions = n_actions
@@ -60,7 +60,7 @@ class QNetworkAgent():
         self.eps_decay = eps_decay
         self.tau = tau
         self.lr = lr
-        self.action_space = action_space
+        self.action_space = gymnasium.spaces.discrete.Discrete(n_actions)
         
         self.policy_net = DQN(n_observations, n_actions).to(device)
         self.target_net = DQN(n_observations, n_actions).to(device)
@@ -68,11 +68,10 @@ class QNetworkAgent():
         self.criterion = nn.SmoothL1Loss()
         self.optimizer = optim.AdamW(self.policy_net.parameters(), lr=lr, amsgrad=True)
         
-        self.memory = ReplayMemory(10000)
-        self.steps_done = 0
+        self.memory = ReplayMemory(replay_memory_size)
         self.episode_durations = []
         self.episode_rewards = []
-        self.steps_done = 0
+
 
     
     def select_action(self, steps_done, state):
@@ -143,11 +142,11 @@ class QNetworkAgent():
             target_net_state_dict[key] = policy_net_state_dict[key]*self.tau + target_net_state_dict[key]*(1-self.tau)
         self.target_net.load_state_dict(target_net_state_dict)
 
-    def save_model(self, filepath1='policy_net.pth', filepath2='target_net.pth'):
-        torch.save(self.policy_net.state_dict(), filepath1)
-        torch.save(self.target_net.state_dict(), filepath2)
+    def save_model(self, policy_path='policy_net1.pth', target_path='target_net1.pth'):
+        torch.save(self.policy_net.state_dict(), policy_path)
+        torch.save(self.target_net.state_dict(), target_path)
 
-    def load_model(self, filepath1='policy_net.pth', filepath2='target_net.pth'):
-        self.policy_net.load_state_dict(torch.load(filepath1))
-        self.target_net.load_state_dict(torch.load(filepath2))
+    def load_model(self, policy_path='policy_net.pth', target_path='target_net.pth'):
+        self.policy_net.load_state_dict(torch.load(policy_path))
+        self.target_net.load_state_dict(torch.load(target_path))
 
