@@ -53,21 +53,17 @@ def training_loop(env, agent, device, adversary, num_episodes = 20000, memory = 
         # Initialize the environment and get its state
         env.reset()
         state_dict = env.state_dict()
-        state = state_constructor.construct_state_continuous(state_dict, 0)
+        state = state_constructor.construct_state_continuous(state_dict, 0, False)
         action = agent.select_action(i, state)
         last_action = action
         while not done:
-            
-            #observation, reward, terminated, truncated, _ = env.step(action.item())
             _, reward, done, a = env.step(get_action(state_dict['main_pot'], action.item()))
             state_dict = env.state_dict()
-            
-            if state_dict['current_player'] == 0:
-                r = torch.tensor([reward[0]], device=device)
-                #if terminated:
-                #    next_state = None
-                next_state = state_constructor.construct_state_continuous(state_dict, 0)
 
+            if state_dict['current_player'] == 0 or done:
+                r = torch.tensor([reward[0]], device=device)
+                next_state = state_constructor.construct_state_continuous(state_dict, 0, done)
+                
                 # Store the transition in memory
                 memory.push(state, last_action, next_state, r)
 
@@ -93,7 +89,7 @@ device = torch.device(
 )
 
 if __name__ == '__main__':
-    n_observations = 8
+    n_observations = 10
     n_actions = 8
     args = NoLimitHoldem.ARGS_CLS(n_seats=2,
                                 stack_randomization_range=(0, 9700),
@@ -111,7 +107,7 @@ if __name__ == '__main__':
                           n_observations=n_observations, 
                           n_actions=n_actions,
                           replay_memory_size=10000,
-                          batch_size=64, 
+                          batch_size=256, 
                           gamma=1, 
                           eps_start=0.9, 
                           eps_end=0.05, 

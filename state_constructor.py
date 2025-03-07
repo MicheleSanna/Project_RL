@@ -23,7 +23,7 @@ class StateConstructor():
         self.last_game_phase=None  
 
 
-    def construct_state_continuous(self, state_dict, current_player):
+    def construct_state_continuous(self, state_dict, current_player, done):
         stack = state_dict['seats'][current_player]['stack']
         game_phase = state_dict['current_round']
         player_bet = state_dict['seats'][current_player]['current_bet']
@@ -48,7 +48,7 @@ class StateConstructor():
             self.calculate_equity(tablecards, state_dict['seats'][current_player]['hand'], iterations)
         
         norm_call = ((adv_bet - player_bet) * self.initial_stack_inv ) 
-        state_array = torch.tensor([0, 0, 0, 0, self.equity, pot * self.initial_stack_inv, stack * self.initial_stack_inv, norm_call], dtype=torch.float32, device=self.device)
+        state_array = torch.tensor([0, 0, 0, 0, self.equity, pot * self.initial_stack_inv, stack * self.initial_stack_inv, norm_call, 1 if state_dict['seats'][current_player - 1]['folded_this_episode'] == True else 0, 1 if done else 0], dtype=torch.float32, device=self.device)
         
         state_array[game_phase] = 1
         self.last_game_phase = game_phase

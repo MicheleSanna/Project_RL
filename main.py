@@ -91,10 +91,12 @@ if __name__ == '__main__':
             _, reward, done, a = env.step(get_action(state_dict['main_pot'], new_action))
             
             state_dict = env.state_dict()
-            #print("--------------------------------------")
-            #print(state_dict)
+
             if state_dict['current_player'] == 0:
                 new_state = state_constructor.construct_state_bin(state_dict, 0)
+                if reward[0] != 0:
+                    print("GOTTEN REWARD: ", reward)
+                print(new_state)
                 new_action = e_sarsa.get_action_epsilon_greedy(new_state, 0.1)
                 e_sarsa.single_step_update(state, action, reward[0], new_state, done, 0.1)
                 #print("SARSA PLAYER ACTION: ", new_action)
@@ -103,6 +105,8 @@ if __name__ == '__main__':
             else:
                 new_action = random.choices([0, 1, 2, 3, 4, 5, 6, 7], [0.1, 2, 1, 0.5, 0.1, 0.05, 0.02, 0.01])[0]
                 #print("RANDOM PLAYER ACTION: ", new_action)
+        print(f"Episode {i} reward: ", reward)
+        print("--------------------------------------")
 
             
  
