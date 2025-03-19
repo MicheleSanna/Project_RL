@@ -37,7 +37,8 @@ class DQN(nn.Module):
         self.layer1 = nn.Linear(n_observations, 256)
         self.layer2 = nn.Linear(256, 256)
         self.layer3 = nn.Linear(256, 256)
-        self.layer4 = nn.Linear(256, n_actions)
+        self.layer4 = nn.Linear(256, 256)
+        self.layer5 = nn.Linear(256, n_actions)
 
     # Called with either one element to determine next action, or a batch
     # during optimization. Returns tensor([[left0exp,right0exp]...]).
@@ -45,7 +46,8 @@ class DQN(nn.Module):
         x = F.relu(self.layer1(x))
         x = F.relu(self.layer2(x))
         x = F.relu(self.layer3(x))
-        return self.layer4(x)
+        x = F.relu(self.layer4(x))
+        return self.layer5(x)
     
 
 class QNetworkAgent():
@@ -117,7 +119,9 @@ class QNetworkAgent():
         # state value or 0 in case the state was final.
         next_state_values = torch.zeros(self.batch_size, device=self.device)
         with torch.no_grad():
-            next_state_values[non_final_mask] = self.target_net(non_final_next_states).max(1).values
+            #SINGLE DQN: next_state_values[non_final_mask] = self.target_net(non_final_next_states).max(1).values
+            next_state_actions = self.policy_net(non_final_next_states).max(1).indices
+            next_state_values[non_final_mask] = self.target_net(non_final_next_states).gather(1, next_state_actions.unsqueeze(1)).squeeze(1)
         # Compute the expected Q values
         expected_state_action_values = (next_state_values * self.gamma) + reward_batch
 

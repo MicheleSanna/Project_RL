@@ -13,6 +13,8 @@ from matplotlib import pyplot as plt
 from dqn import DQN, ReplayMemory, Transition, QNetworkAgent
 from players.nn_player import NNPlayer
 from players.random_player import RandomPlayer
+from plot import plot
+
 
 def get_action(pot, action_id, big_blind=100):
     match action_id:
@@ -33,20 +35,20 @@ def get_action(pot, action_id, big_blind=100):
         case 7:
             return [2, pot*4]
         
+
 def training_loop(env, agent, device, adversary, num_episodes = 20000, memory = ReplayMemory(10000), version_name = '1.0'):
-    episode_reward=np.zeros(int(n_episodes/100))
+    episode_reward=np.zeros(n_episodes)
     reward = [0,0]
     best_performance = 0
+    print("Lesgo")
     for i in range(num_episodes):
-        feet = int(i*0.01)
-        episode_reward[feet] += reward[0] * 0.1
-        if (i%100 == 0):
-            print(f"Step: {i}, reward of last 100: {episode_reward[feet-1]}, time elapsed: {time.time()-start}")
+        if (i%100 == 0 and i != 0):
+            print(f"Step: {i}, reward of last 100: {sum(episode_reward[i-100:i])}, time elapsed: {time.time()-start}")
         if (i%5000 == 0 and i != 0):
-            print(f"REWARD_NOW: {episode_reward[feet]}, AVG_REWARD: {sum(episode_reward[feet-50:feet-1])}")
-            if sum(episode_reward[feet-50:feet-1]) > best_performance:
-                best_performance = sum(episode_reward[feet-50:feet-1])
-                agent.save_model(policy_path=f"policy_{version_name}.pt", target_path=f"target_{version_name}.pt")
+            print(f"REWARD_NOW: {episode_reward[i-1]}, AVG_REWARD: {sum(episode_reward[i-5000:i])}")
+            if sum(episode_reward[i-5000:i]) > best_performance:
+                best_performance = sum(episode_reward[i-5000:i])
+                agent.save_model(policy_path=f"policy_{version_name}.pth", target_path=f"target_{version_name}.pth")
                 print("SAVED!")
 
         done = False
@@ -63,7 +65,7 @@ def training_loop(env, agent, device, adversary, num_episodes = 20000, memory = 
             if state_dict['current_player'] == 0 or done:
                 r = torch.tensor([reward[0]], device=device)
                 next_state = state_constructor.construct_state_continuous(state_dict, 0, done)
-                
+
                 # Store the transition in memory
                 memory.push(state, last_action, next_state, r)
 
@@ -74,10 +76,11 @@ def training_loop(env, agent, device, adversary, num_episodes = 20000, memory = 
                 agent.optimize_model(memory)
                 agent.update_target_net()
 
-                action = agent.select_action(i, state)
+                action = agent.select_action(i, state) if not done else None
                 last_action = action
             else:
                 action = adversary.select_action(state)
+        episode_reward[i] = reward[0] 
 
     print('Complete')
     return episode_reward
@@ -89,7 +92,7 @@ device = torch.device(
 )
 
 if __name__ == '__main__':
-    n_observations = 10
+    n_observations = 8
     n_actions = 8
     args = NoLimitHoldem.ARGS_CLS(n_seats=2,
                                 stack_randomization_range=(0, 9700),
@@ -102,7 +105,7 @@ if __name__ == '__main__':
                                          initial_stack=10000, 
                                          n_workers=4,
                                          device=device)
-    n_episodes = 200000
+    n_episodes = 100000
     agent = QNetworkAgent(device=device, 
                           n_observations=n_observations, 
                           n_actions=n_actions,
@@ -110,23 +113,24 @@ if __name__ == '__main__':
                           batch_size=256, 
                           gamma=1, 
                           eps_start=0.9, 
-                          eps_end=0.05, 
-                          eps_decay=200, 
+                          eps_end=0.01, 
+                          eps_decay=n_episodes-(n_episodes/3), 
                           tau=0.001, 
                           lr=0.0005)
-    #agent.load_model(policy_path="policy_net.pth", target_path="target_net.pth")
+    #agent.load_model(policy_path="policy_1.0.pth", target_path="target_1.0.pth")
     start = time.time()
     print(device)
+    #adv = NNPlayer(policy_net=agent.policy_net, policy_net_name="policy_1.0.pth", device=device)
     episode_reward = training_loop(env, 
                                    agent, 
                                    device, 
                                    RandomPlayer(device),
                                    num_episodes = n_episodes, 
-                                   memory = ReplayMemory(10000))
- 
+                                   memory = ReplayMemory(10000),
+                                   version_name="1.0")
+    
+    reward_averages = np.zeros(n_episodes//100)
+    for i in range(0, 100000, 100):
+        reward_averages[(i//100)] = sum(episode_reward[i:i+100])*0.1
     print("Time elapsed: ", time.time()-start)
-    plt.plot(episode_reward)
-    plt.xlabel('Episode (x100)')
-    plt.ylabel('Reward')
-    plt.title('Episode Reward Over Time')
-    plt.show()            
+    plot(reward_averages, 25)

@@ -24,31 +24,32 @@ class StateConstructor():
 
 
     def construct_state_continuous(self, state_dict, current_player, done):
+        if done:
+            return None
         stack = state_dict['seats'][current_player]['stack']
         game_phase = state_dict['current_round']
         player_bet = state_dict['seats'][current_player]['current_bet']
         adv_bet = state_dict['seats'][current_player - 1]['current_bet']
         pot = state_dict['main_pot'] + player_bet + adv_bet
         
-        match game_phase:
-            case 0:
-                tablecards = []
-                iterations = 500
-            case 1:
-                tablecards = state_dict['board_2d'][:3]
-                iterations = 2000
-            case 2:
-                tablecards = state_dict['board_2d'][:4]
-                iterations = 1500
-            case 3:
-                tablecards = state_dict['board_2d'][:5]
-                iterations = 1000
-        
         if game_phase != self.last_game_phase:
+            match game_phase:
+                case 0:
+                    tablecards = []
+                    iterations = 500
+                case 1:
+                    tablecards = state_dict['board_2d'][:3]
+                    iterations = 2000
+                case 2:
+                    tablecards = state_dict['board_2d'][:4]
+                    iterations = 1500
+                case 3:
+                    tablecards = state_dict['board_2d'][:5]
+                    iterations = 1000
             self.calculate_equity(tablecards, state_dict['seats'][current_player]['hand'], iterations)
         
         norm_call = ((adv_bet - player_bet) * self.initial_stack_inv ) 
-        state_array = torch.tensor([0, 0, 0, 0, self.equity, pot * self.initial_stack_inv, stack * self.initial_stack_inv, norm_call, 1 if state_dict['seats'][current_player - 1]['folded_this_episode'] == True else 0, 1 if done else 0], dtype=torch.float32, device=self.device)
+        state_array = torch.tensor([0, 0, 0, 0, self.equity, pot * self.initial_stack_inv, stack * self.initial_stack_inv, norm_call], dtype=torch.float32, device=self.device)
         
         state_array[game_phase] = 1
         self.last_game_phase = game_phase
