@@ -30,18 +30,16 @@ class ReplayMemory(object):
         return len(self.memory)
 
 
-class DQN(nn.Module):
-
+class BaseNetwork(nn.Module):
     def __init__(self, n_observations, n_actions):
-        super(DQN, self).__init__()
+        super(BaseNetwork, self).__init__()
         self.layer1 = nn.Linear(n_observations, 256)
         self.layer2 = nn.Linear(256, 256)
         self.layer3 = nn.Linear(256, 256)
         self.layer4 = nn.Linear(256, 256)
         self.layer5 = nn.Linear(256, n_actions)
 
-    # Called with either one element to determine next action, or a batch
-    # during optimization. Returns tensor([[left0exp,right0exp]...]).
+
     def forward(self, x):
         x = F.relu(self.layer1(x))
         x = F.relu(self.layer2(x))
@@ -50,7 +48,7 @@ class DQN(nn.Module):
         return self.layer5(x)
     
 
-class QNetworkAgent():
+class DQNTrainer():
     def __init__(self, device, n_observations, n_actions, replay_memory_size, batch_size, gamma, eps_start, eps_end, eps_decay, tau, lr):
         self.device = device
         self.n_observations = n_observations
@@ -64,8 +62,8 @@ class QNetworkAgent():
         self.lr = lr
         self.action_space = gymnasium.spaces.discrete.Discrete(n_actions)
         
-        self.policy_net = DQN(n_observations, n_actions).to(device)
-        self.target_net = DQN(n_observations, n_actions).to(device)
+        self.policy_net = BaseNetwork(n_observations, n_actions).to(device)
+        self.target_net = BaseNetwork(n_observations, n_actions).to(device)
         self.target_net.load_state_dict(self.policy_net.state_dict())
         self.criterion = nn.SmoothL1Loss()
         self.optimizer = optim.AdamW(self.policy_net.parameters(), lr=lr, amsgrad=True)
@@ -75,20 +73,25 @@ class QNetworkAgent():
         self.episode_rewards = []
 
 
-    
-    def select_action(self, steps_done, state):
-        sample = random.random()
-        eps_threshold = self.eps_end + (self.eps_start - self.eps_end) * \
-            math.exp(-1. * steps_done / self.eps_decay)
-
-        if sample > eps_threshold:
+    def select_action(self, steps_done, state, mode='boltzmann'):
+        if mode == 'boltzmann':
             with torch.no_grad():
-                # t.max(1) will return the largest column value of each row.
-                # second column on max result is index of where max element was
-                # found, so we pick action with the larger expected reward.
-                return self.policy_net(state).max(1).indices.view(1, 1)
+                q_values = self.policy_net(state)
+                probabilities = F.softmax(q_values, dim=1)
+                action = torch.multinomial(probabilities, 1)
+                return action.view(1, 1)
         else:
-            return torch.tensor([[self.action_space.sample()]], device=self.device, dtype=torch.long) #before it was env.action_space
+            sample = random.random()
+            eps_threshold = self.eps_end + (self.eps_start - self.eps_end) * \
+                math.exp(-1. * steps_done / self.eps_decay)
+
+            if sample > eps_threshold:
+                with torch.no_grad():
+                    # t.max(1) will return the largest column value of each row.
+                    # second column on max result is index of where max element was
+                    return self.policy_net(state).max(1).indices.view(1, 1)
+            else:
+                return torch.tensor([[self.action_space.sample()]], device=self.device, dtype=torch.long) #before it was env.action_space"""
         
 
     def optimize_model(self, memory):

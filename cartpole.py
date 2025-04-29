@@ -5,12 +5,12 @@ import matplotlib
 import matplotlib.pyplot as plt
 from collections import namedtuple, deque
 from itertools import count
-from dqn import DQN, ReplayMemory, Transition
+from dqn import BaseNetwork, ReplayMemory, Transition
 import torch
 import torch.nn as nn
 import torch.optim as optim
 import torch.nn.functional as F
-from dqn import QNetworkAgent
+from dqn import DQNTrainer
 
 env = gymnasium.make("CartPole-v1")
 
@@ -29,7 +29,7 @@ n_actions = env.action_space.n
 state, info = env.reset()
 n_observations = len(state)
 
-agent = QNetworkAgent(device, n_observations, n_actions, batch_size=128, gamma=0.999, eps_start=0.9, eps_end=0.05, eps_decay=0.999, tau=0.001, lr=0.0005)
+agent = DQNTrainer(device, n_observations, n_actions, batch_size=128, gamma=0.999, eps_start=0.9, eps_end=0.05, eps_decay=0.999, tau=0.001, lr=0.0005)
 
 
 def plot_durations(episode_durations, show_result=False):
