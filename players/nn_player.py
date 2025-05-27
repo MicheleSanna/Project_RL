@@ -9,8 +9,8 @@ class NNPlayer():
         self.state_constructor = state_constructor
         self.policy_net.load_state_dict(torch.load(policy_net_name))
 
-    def select_action(self, i, state_dict):
-        state = self.state_constructor.construct_state_continuous(state_dict, 1, False)
+    def select_action(self, i, state_dict, player_seat):
+        state = self.state_constructor.construct_state_continuous(state_dict, player_seat, False)
         #print_state(state, adv=True)
         with torch.no_grad():
             q_values = self.policy_net(state)
@@ -18,10 +18,10 @@ class NNPlayer():
             action = torch.multinomial(probabilities, 1)
             return action.view(1, 1)
         
-    def play(self, i, state_dict, done, flops, reward):
+    def play(self, i, state_dict, done, flops, reward, player_seat):
         if not done:
             last_phase = state_dict['current_round']
-            action = self.select_action(i, state_dict) if not done else None
+            action = self.select_action(i, state_dict, player_seat) if not done else None
             flops[i, 1] = 1 if action.item() == 0 else 0
         else:
             action = None

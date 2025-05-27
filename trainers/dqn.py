@@ -1,55 +1,16 @@
 import gymnasium
 import math
 import random
-import matplotlib
-import matplotlib.pyplot as plt
-from collections import namedtuple, deque
-from itertools import count
-
 import torch
 import torch.nn as nn
 import torch.optim as optim
 import torch.nn.functional as F
+from memories import Transition, ReplayMemory
+from network import BaseNetwork
 
-Transition = namedtuple('Transition',
-                        ('state', 'action', 'next_state', 'reward'))
-
-class ReplayMemory(object):
-
-    def __init__(self, capacity):
-        self.memory = deque([], maxlen=capacity)
-
-    def push(self, *args):
-        """Save a transition"""
-        self.memory.append(Transition(*args))
-
-    def sample(self, batch_size):
-        return random.sample(self.memory, batch_size)
-
-    def __len__(self):
-        return len(self.memory)
-
-
-class BaseNetwork(nn.Module):
-    def __init__(self, n_observations, n_actions):
-        super(BaseNetwork, self).__init__()
-        self.layer1 = nn.Linear(n_observations, 256)
-        self.layer2 = nn.Linear(256, 256)
-        self.layer3 = nn.Linear(256, 256)
-        self.layer4 = nn.Linear(256, 256)
-        self.layer5 = nn.Linear(256, n_actions)
-
-
-    def forward(self, x):
-        x = F.relu(self.layer1(x))
-        x = F.relu(self.layer2(x))
-        x = F.relu(self.layer3(x))
-        x = F.relu(self.layer4(x))
-        return self.layer5(x)
-    
-
+# This is the DQN trainer class that will be used to train the DQN agent.
 class DQNTrainer():
-    def __init__(self, device, n_observations, n_actions, replay_memory_size, batch_size, gamma, eps_start, eps_end, eps_decay, tau, lr):
+    def __init__(self, device, n_observations, n_actions, batch_size, gamma, eps_start, eps_end, eps_decay, tau, lr):
         self.device = device
         self.n_observations = n_observations
         self.n_actions = n_actions
@@ -67,10 +28,6 @@ class DQNTrainer():
         self.target_net.load_state_dict(self.policy_net.state_dict())
         self.criterion = nn.SmoothL1Loss()
         self.optimizer = optim.AdamW(self.policy_net.parameters(), lr=lr, amsgrad=True)
-        
-        self.memory = ReplayMemory(replay_memory_size)
-        self.episode_durations = []
-        self.episode_rewards = []
 
 
     def select_action(self, steps_done, state, mode='boltzmann'):
@@ -152,8 +109,10 @@ class DQNTrainer():
     def save_model(self, policy_path='policy_net1.pth', target_path='target_net1.pth'):
         torch.save(self.policy_net.state_dict(), policy_path)
         torch.save(self.target_net.state_dict(), target_path)
+        print("SAVED!")
 
     def load_model(self, policy_path='policy_net.pth', target_path='target_net.pth'):
         self.policy_net.load_state_dict(torch.load(policy_path))
         self.target_net.load_state_dict(torch.load(target_path))
+        print("LOADED!")
 

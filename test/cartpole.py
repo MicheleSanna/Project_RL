@@ -5,12 +5,12 @@ import matplotlib
 import matplotlib.pyplot as plt
 from collections import namedtuple, deque
 from itertools import count
-from dqn import BaseNetwork, ReplayMemory, Transition
+from trainers.dqn import BaseNetwork, ReplayMemory, Transition
 import torch
 import torch.nn as nn
 import torch.optim as optim
 import torch.nn.functional as F
-from dqn import DQNTrainer
+from trainers.dqn import DQNTrainer
 
 env = gymnasium.make("CartPole-v1")
 
