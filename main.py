@@ -29,7 +29,7 @@ if __name__ == '__main__':
     )
     
     n_episodes = 100000
-    n_observations = 8
+    n_observations = 13
     n_actions = 8
 
     args = NoLimitHoldem.ARGS_CLS(n_seats=2,

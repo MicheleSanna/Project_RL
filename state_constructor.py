@@ -20,13 +20,19 @@ class StateConstructor():
         self.initial_stack_inv = 1/initial_stack
         self.pool = Pool(n_workers)
         self.equity=None
-        self.last_game_phase=None  
+        self.last_game_phase=None
+        self.adv_bet_history = np.zeros(4, dtype=np.float32)
 
 
     def construct_state_continuous(self, state_dict, current_player, done):
         if done:
+            self.adv_bet_history[0] = 0
+            self.adv_bet_history[1] = 0
+            self.adv_bet_history[2] = 0
+            self.adv_bet_history[3] = 0
             return None
         stack = state_dict['seats'][current_player]['stack']
+        adv_stack = state_dict['seats'][current_player-1]['stack']
         game_phase = state_dict['current_round']
         player_bet = state_dict['seats'][current_player]['current_bet']
         adv_bet = state_dict['seats'][current_player - 1]['current_bet']
@@ -48,8 +54,9 @@ class StateConstructor():
                     iterations = 1000
             self.calculate_equity(tablecards, state_dict['seats'][current_player]['hand'], iterations)
         
-        norm_call = ((adv_bet - player_bet) * self.initial_stack_inv ) 
-        state_array = torch.tensor([0, 0, 0, 0, self.equity, pot * self.initial_stack_inv, stack * self.initial_stack_inv, norm_call], dtype=torch.float32, device=self.device)
+        norm_call = ((adv_bet - player_bet) * self.initial_stack_inv )
+        self.adv_bet_history[game_phase] += norm_call
+        state_array = torch.tensor([0, 0, 0, 0, self.equity, pot * self.initial_stack_inv, stack * self.initial_stack_inv, adv_stack * self.initial_stack_inv, norm_call, self.adv_bet_history[0], self.adv_bet_history[1], self.adv_bet_history[2], self.adv_bet_history[3]], dtype=torch.float32, device=self.device)
         
         state_array[game_phase] = 1
         self.last_game_phase = game_phase
