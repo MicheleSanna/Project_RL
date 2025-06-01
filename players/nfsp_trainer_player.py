@@ -41,7 +41,7 @@ class NFSPTrainerPlayer():
         self.trainer.optimize_model(self.replay_memory)
         if update_mode == 'hard' and self.total_steps % self.trainer.tau == 0:
             self.trainer.hard_update_target_net()
-        else:
+        elif update_mode == 'soft':
             self.trainer.soft_update_target_net()
             
         if done:

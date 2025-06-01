@@ -3,8 +3,9 @@ import torch.nn as nn
 import torch.nn.functional as F
 
 class NNPlayer():
-    def __init__(self, state_constructor, policy_net, policy_net_name, device):
+    def __init__(self, state_constructor, policy_net, policy_net_name, mode, device):
         self.policy_net = policy_net
+        self.mode = mode
         self.device = device
         self.state_constructor = state_constructor
         self.policy_net.load_state_dict(torch.load(policy_net_name))
@@ -12,11 +13,19 @@ class NNPlayer():
     def select_action(self, i, state_dict, player_seat):
         state = self.state_constructor.construct_state_continuous(state_dict, player_seat, False)
         #print_state(state, adv=True)
-        with torch.no_grad():
-            q_values = self.policy_net(state)
-            probabilities = F.softmax(q_values, dim=1)
-            action = torch.multinomial(probabilities, 1)
-            return action.view(1, 1)
+        if self.mode == 'boltzmann':
+            with torch.no_grad():
+                q_values = self.policy_net(state)
+                probabilities = F.softmax(q_values, dim=1)
+                action = torch.multinomial(probabilities, 1)
+                return action.view(1, 1)
+        else:
+            with torch.no_grad():
+                # t.max(1) will return the largest column value of each row.
+                # second column on max result is index of where max element was
+                return self.policy_net(state).max(1).indices.view(1, 1)
+
+
         
     def play(self, i, state_dict, done, flops, reward, player_seat):
         if not done:
@@ -25,6 +34,7 @@ class NNPlayer():
             flops[i, 1] = 1 if action.item() == 0 else 0
         else:
             action = None
+            last_phase = None
 
         return action, last_phase
         

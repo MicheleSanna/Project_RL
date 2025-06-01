@@ -7,8 +7,9 @@ class PerformanceTracker():
         self.flops = np.zeros((n_episodes, n_players))
         self.empty_hands=np.zeros(n_episodes)
         self.best_performance = 0
-        self.savepath_policy = f"policy_{version_name}.pth"
-        self.savepath_target = f"target_{version_name}.pth"
+        self.savepath_policy = f"nfsp_run/policy_{version_name}"
+        self.savepath_target = f"nfsp_run/target_{version_name}"
+        self.savepath_behaviour = f"nfsp_run/behaviour_{version_name}"
         self.start = time.time()
 
     def update(self, i, reward, last_phase, hero, hero_seat):
@@ -17,11 +18,9 @@ class PerformanceTracker():
 
         if (i%100 == 0 and i != 0):
             print(f"Step: {i}, reward of last 100: {sum(self.episode_reward[i-100:i])}, time elapsed: {time.time()-self.start}")
-        if (i%5000 == 0 and i != 0):
-            print(f"REWARD_NOW: {self.episode_reward[i-1]}, AVG_REWARD: {sum(self.episode_reward[i-5000:i])}, Flops player1: {sum(self.flops[i-5000:i, 0])}, Flops player2: {sum(self.flops[i-5000:i, 1])}")
-            if sum(self.episode_reward[i-5000:i]) > self.best_performance:
-                self.best_performance = sum(self.episode_reward[i-5000:i])
-                hero.trainer.save_model(policy_path=self.savepath_policy, target_path=self.savepath_target)
+        if (i%10000 == 0 and i != 0):
+            print(f"REWARD_NOW: {self.episode_reward[i-1]}, AVG_REWARD: {sum(self.episode_reward[i-5000:i])}, Flops player1: {sum(self.flops[i-5000:i, 0])}, Flops player2: {sum(self.flops[i-5000:i, 1])}")        
+            #hero.trainer.save_model(policy_path=self.savepath_policy + f"_{i//1000}k.pth", target_path=self.savepath_target + f"_{i//1000}k.pth", behaviour_path=self.savepath_behaviour + f"_{i//1000}k.pth")
                 
 
     def get_stats(self):

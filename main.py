@@ -28,31 +28,25 @@ if __name__ == '__main__':
     "cpu"
     )
     
-    n_episodes = 100000
+    n_episodes = 500000
     n_observations = 13
     n_actions = 8
 
     args = NoLimitHoldem.ARGS_CLS(n_seats=2,
-                                stack_randomization_range=(0, 9700),
-                                starting_stack_sizes_list=[300] * 2,
+                                stack_randomization_range=(0, 9900),
+                                starting_stack_sizes_list=[100,100],
                                 use_simplified_headsup_obs=True,
                                 randomize_positions=True)
     env = NoLimitHoldem(is_evaluating=False, env_args=args, lut_holder=NoLimitHoldem.get_lut_holder())
 
-    state_constructor_player = StateConstructor(equity_bins=[0.4, 0.6, 1], 
-                                                pot_bins=[0, 0.05, 0.1, 0.2, 0.4, 0.8, 9999], 
-                                                raise_bins=[0, 0.1, 0.5, 1, 3, 9999], 
-                                                big_blind=100, 
+    state_constructor_player = StateConstructor(big_blind=100, 
                                                 initial_stack=10000, 
                                                 n_workers=4,
                                                 device=device)
-    state_constructor_adv = StateConstructor(equity_bins=[0.4, 0.6, 1], 
-                                                pot_bins=[0, 0.05, 0.1, 0.2, 0.4, 0.8, 9999], 
-                                                raise_bins=[0, 0.1, 0.5, 1, 3, 9999], 
-                                                big_blind=100, 
-                                                initial_stack=10000, 
-                                                n_workers=4,
-                                                device=device)
+    state_constructor_adv = StateConstructor(big_blind=100, 
+                                             initial_stack=10000, 
+                                             n_workers=4,
+                                             device=device)
 
 
     dqn_trainer = DQNTrainer(device=device, 
@@ -70,12 +64,25 @@ if __name__ == '__main__':
                             n_actions=n_actions,
                             batch_size=256, 
                             gamma=1, 
-                            eps_start=0.1, 
-                            eps_end=0.001, 
+                            eps_start=0.12, 
+                            eps_end=0.0001, 
                             eps_decay=n_episodes-(n_episodes/3), 
-                            tau=0.001, 
+                            tau=400, 
                             lr=0.0005,
-                            eta=0.1,
+                            eta=0.2,
+                            batch_size_behaviour=256)
+    
+    nfsp_trainer_adv = NFSPTrainer(device=device, 
+                            n_observations=n_observations, 
+                            n_actions=n_actions,
+                            batch_size=256, 
+                            gamma=1, 
+                            eps_start=0.12, 
+                            eps_end=0.0001, 
+                            eps_decay=n_episodes-(n_episodes/3), 
+                            tau=400, 
+                            lr=0.0005,
+                            eta=0.2,
                             batch_size_behaviour=256)
     #dqn_trainer.load_model(policy_path="policy_4.0.pth", target_path="target_4.0.pth")
     hero_dqn = DQNTrainerPlayer(state_constructor=state_constructor_player,
@@ -86,8 +93,16 @@ if __name__ == '__main__':
     hero_nfsp = NFSPTrainerPlayer(state_constructor=state_constructor_player,
                             trainer=nfsp_trainer,
                             replay_memory_size=10000,
-                            reservoir_memory_size=100000,
+                            reservoir_memory_size=180000,
                             device=device)
+    
+    opponent_nfsp = NFSPTrainerPlayer(state_constructor=state_constructor_adv,
+                            trainer=nfsp_trainer_adv,
+                            replay_memory_size=10000,
+                            reservoir_memory_size=180000,
+                            device=device)
+    
+    #opponent_nn_policy = NNPlayer(state_constructor=state_constructor_adv, policy_net=BaseNetwork(n_observations, n_actions).to(device), policy_net_name="policy_4.0.pth", device=device)
 
 
 
@@ -95,9 +110,8 @@ if __name__ == '__main__':
     print(device)
     #adv = NNPlayer(policy_net=agent.policy_net, policy_net_name="policy_2.0.pth", device=device)
     episode_reward, flops, empty_hands = training_loop(env, 
-                                                        hero = hero_dqn,
+                                                        hero = NNPlayer(policy_net=hero_nfsp.trainer.policy_net, state_constructor=state_constructor_player, policy_net_name="nfsp_run\\behaviour_test_490k.pth", device=device, mode='max'),
                                                         opponent = RandomPlayer(device=device),
-                                                        #opponent = NNPlayer(state_constructor=state_constructor_adv, policy_net=BaseNetwork(n_observations, n_actions).to(device), policy_net_name="policy_4.0.pth", device=device),
                                                         num_episodes = n_episodes, 
                                                         version_name="test")
     

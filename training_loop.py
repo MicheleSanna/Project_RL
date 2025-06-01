@@ -17,9 +17,9 @@ def get_action(pot, action_id, big_blind=100):
         case 5:
             return [2, pot*1]
         case 6:
-            return [2, pot*2]
+            return [2, pot*1.5]
         case 7:
-            return [2, pot*4]
+            return [2, pot*2]
 
 
 def training_loop(env, hero, opponent, num_episodes, version_name):
@@ -35,10 +35,10 @@ def training_loop(env, hero, opponent, num_episodes, version_name):
         # Initialize the environment and get its state
         _, reward, done, _ = env.reset()
         state_dict = env.state_dict()
-
+        #print("-----------------")
         while not done:
             if state_dict['current_player'] == hero_seat:
-                action, _ = hero.play(i, state_dict, done, performance_tracker.flops, reward, hero_seat)
+                action, last_phase = hero.play(i, state_dict, done, performance_tracker.flops, reward, hero_seat)
             else:
                 action, last_phase = opponent.play(i, state_dict, done, performance_tracker.flops, reward, opponent_seat)
 

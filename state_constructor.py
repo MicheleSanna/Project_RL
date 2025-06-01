@@ -10,7 +10,7 @@ from multiprocessing import Process, Queue
 E = Evaluation()
 
 class StateConstructor():
-    def __init__(self, equity_bins, pot_bins, raise_bins, big_blind, initial_stack, n_workers=4, device='cpu'):
+    def __init__(self, big_blind, initial_stack, equity_bins = [0.4, 0.6, 1], pot_bins = [0, 0.05, 0.1, 0.2, 0.4, 0.8, 9999], raise_bins = [0, 0.1, 0.5, 1, 3, 9999], n_workers=4, device='cpu'):
         self.device = device
         self.equity_bins = equity_bins
         self.pot_bins = pot_bins
@@ -61,6 +61,8 @@ class StateConstructor():
         state_array[game_phase] = 1
         self.last_game_phase = game_phase
         
+        #print(f"Player {current_player} state: {state_array.unsqueeze(0)}")
+
         return state_array.unsqueeze(0)
     
     
@@ -99,6 +101,7 @@ class StateConstructor():
         equity_idx = self.get_bin_index(self.equity, self.equity_bins)
         self.last_game_phase = game_phase
         return np.array([equity_idx, pot_idx, call_idx, game_phase])
+    
     
     def calculate_equity(self, tablecards, hand, iterations, nplayers=2):
         args_list = [{"card1": hand[0], "card2": hand[1], "tablecards": tablecards, "iterations": iterations, "player_amount": nplayers}] * 4
