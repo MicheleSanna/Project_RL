@@ -52,7 +52,7 @@ class NFSPTrainerPlayer():
             action, best_response = self.trainer.select_action(i, next_state) 
             if best_response:
                 self.average_policy_memory.push(next_state, action)
-            flops[i, 0] = 1 if action.item() == 0 else 0
+            flops[i, player_seat] = 1 if action.item() == 0 else 0
 
         self.last_action = action
         return action, None

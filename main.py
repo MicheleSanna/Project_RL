@@ -28,7 +28,7 @@ if __name__ == '__main__':
     "cpu"
     )
     
-    n_episodes = 500000
+    n_episodes = 250000
     n_observations = 13
     n_actions = 8
 
@@ -110,8 +110,8 @@ if __name__ == '__main__':
     print(device)
     #adv = NNPlayer(policy_net=agent.policy_net, policy_net_name="policy_2.0.pth", device=device)
     episode_reward, flops, empty_hands = training_loop(env, 
-                                                        hero = NNPlayer(policy_net=hero_nfsp.trainer.policy_net, state_constructor=state_constructor_player, policy_net_name="nfsp_run\\behaviour_test_490k.pth", device=device, mode='max'),
-                                                        opponent = RandomPlayer(device=device),
+                                                        hero = hero_nfsp,
+                                                        opponent = opponent_nfsp,
                                                         num_episodes = n_episodes, 
                                                         version_name="test")
     

@@ -46,6 +46,6 @@ def print_state(state, adv=False):
             if state[0][i] == 1:
                 game_phase = i
                 break 
-        print(f"{"ADV" if adv else "AGENT"} Game phase: {game_phase} | Equity: {state[0][4]} | Pot: {state[0][5] * 10000} | Stack: {state[0][6] * 10000} | Norm call: {state[0][7] * 10000}")
+        print(f"{'ADV' if adv else 'AGENT'} Game phase: {game_phase} | Equity: {state[0][4]} | Pot: {state[0][5] * 10000} | Stack: {state[0][6] * 10000} | Norm call: {state[0][7] * 10000}")
     else:
-        print(f"{"ADV" if adv else "AGENT"} Episode end")
+        print(f"{'ADV' if adv else 'AGENT'} Episode end")
