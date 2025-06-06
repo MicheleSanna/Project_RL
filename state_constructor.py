@@ -31,12 +31,12 @@ class StateConstructor():
             self.adv_bet_history[2] = 0
             self.adv_bet_history[3] = 0
             return None
-        stack = state_dict['seats'][current_player]['stack']
-        adv_stack = state_dict['seats'][current_player-1]['stack']
+        stack = state_dict['seats'][current_player]['stack'] * self.initial_stack_inv
+        adv_stack = state_dict['seats'][current_player-1]['stack'] * self.initial_stack_inv
         game_phase = state_dict['current_round']
-        player_bet = state_dict['seats'][current_player]['current_bet']
-        adv_bet = state_dict['seats'][current_player - 1]['current_bet']
-        pot = state_dict['main_pot'] + player_bet + adv_bet
+        player_bet = state_dict['seats'][current_player]['current_bet'] * self.initial_stack_inv
+        adv_bet = state_dict['seats'][current_player - 1]['current_bet'] * self.initial_stack_inv
+        pot = state_dict['main_pot'] * self.initial_stack_inv
         
         if game_phase != self.last_game_phase:
             match game_phase:
@@ -54,15 +54,13 @@ class StateConstructor():
                     iterations = 1000
             self.calculate_equity(tablecards, state_dict['seats'][current_player]['hand'], iterations)
         
-        norm_call = ((adv_bet - player_bet) * self.initial_stack_inv )
-        self.adv_bet_history[game_phase] += norm_call
-        state_array = torch.tensor([0, 0, 0, 0, self.equity, pot * self.initial_stack_inv, stack * self.initial_stack_inv, adv_stack * self.initial_stack_inv, norm_call, self.adv_bet_history[0], self.adv_bet_history[1], self.adv_bet_history[2], self.adv_bet_history[3]], dtype=torch.float32, device=self.device)
+        self.adv_bet_history[game_phase] += (adv_bet - player_bet)
+        state_array = torch.tensor([0, 0, 0, 0, self.equity, pot, stack, adv_stack, player_bet, adv_bet, self.adv_bet_history[0], self.adv_bet_history[1], self.adv_bet_history[2], self.adv_bet_history[3]], dtype=torch.float32, device=self.device)
         
         state_array[game_phase] = 1
         self.last_game_phase = game_phase
         
         #print(f"Player {current_player} state: {state_array.unsqueeze(0)}")
-
         return state_array.unsqueeze(0)
     
     
@@ -102,7 +100,7 @@ class StateConstructor():
         self.last_game_phase = game_phase
         return np.array([equity_idx, pot_idx, call_idx, game_phase])
     
-    
+
     def calculate_equity(self, tablecards, hand, iterations, nplayers=2):
         args_list = [{"card1": hand[0], "card2": hand[1], "tablecards": tablecards, "iterations": iterations, "player_amount": nplayers}] * 4
         self.equity = sum(self.pool.map(run_evaluation_wrapper, args_list))*0.25

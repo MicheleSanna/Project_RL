@@ -28,9 +28,9 @@ if __name__ == '__main__':
     "cpu"
     )
     
-    n_episodes = 250000
-    n_observations = 13
-    n_actions = 8
+    n_episodes = 500000
+    n_observations = 14
+    n_actions = 10
 
     args = NoLimitHoldem.ARGS_CLS(n_seats=2,
                                 stack_randomization_range=(0, 9900),
@@ -93,13 +93,13 @@ if __name__ == '__main__':
     hero_nfsp = NFSPTrainerPlayer(state_constructor=state_constructor_player,
                             trainer=nfsp_trainer,
                             replay_memory_size=10000,
-                            reservoir_memory_size=180000,
+                            reservoir_memory_size=300000,
                             device=device)
     
     opponent_nfsp = NFSPTrainerPlayer(state_constructor=state_constructor_adv,
                             trainer=nfsp_trainer_adv,
                             replay_memory_size=10000,
-                            reservoir_memory_size=180000,
+                            reservoir_memory_size=300000,
                             device=device)
     
     #opponent_nn_policy = NNPlayer(state_constructor=state_constructor_adv, policy_net=BaseNetwork(n_observations, n_actions).to(device), policy_net_name="policy_4.0.pth", device=device)
@@ -113,7 +113,7 @@ if __name__ == '__main__':
                                                         hero = hero_nfsp,
                                                         opponent = opponent_nfsp,
                                                         num_episodes = n_episodes, 
-                                                        version_name="test")
+                                                        version_name="nfsp")
     
     reward_averages = np.zeros(n_episodes//100)
     for i in range(0, n_episodes, 100):

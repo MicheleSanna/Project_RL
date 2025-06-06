@@ -20,7 +20,7 @@ class PerformanceTracker():
             print(f"Step: {i}, reward of last 100: {sum(self.episode_reward[i-100:i])}, time elapsed: {time.time()-self.start}")
         if (i%10000 == 0 and i != 0):
             print(f"REWARD_NOW: {self.episode_reward[i-1]}, AVG_REWARD: {sum(self.episode_reward[i-10000:i])}, Flops player1: {sum(self.flops[i-10000:i, 0])}, Flops player2: {sum(self.flops[i-10000:i, 1])}")        
-            #hero.trainer.save_model(policy_path=self.savepath_policy + f"_{i//1000}k.pth", target_path=self.savepath_target + f"_{i//1000}k.pth", behaviour_path=self.savepath_behaviour + f"_{i//1000}k.pth")
+            hero.trainer.save_model(policy_path=self.savepath_policy + f"_{i//1000}k.pth", target_path=self.savepath_target + f"_{i//1000}k.pth", behaviour_path=self.savepath_behaviour + f"_{i//1000}k.pth")
                 
 
     def get_stats(self):

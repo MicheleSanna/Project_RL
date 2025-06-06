@@ -28,7 +28,7 @@ class NFSPTrainerPlayer():
 
     def play(self, i, state_dict, done, flops, reward, player_seat, update_mode='hard'):
         self.total_steps += 1
-        
+
         r = torch.tensor([reward[player_seat]], device=self.device)
         next_state = self.state_constructor.construct_state_continuous(state_dict, player_seat, done)
         # Store the transition in memory
@@ -55,6 +55,7 @@ class NFSPTrainerPlayer():
             flops[i, player_seat] = 1 if action.item() == 0 else 0
 
         self.last_action = action
+
         return action, None
     
 
