@@ -54,11 +54,23 @@ if __name__ == '__main__':
                             n_actions=n_actions,
                             batch_size=256, 
                             gamma=1, 
-                            eps_start=0.1, 
-                            eps_end=0.001, 
+                            eps_start=0.12, 
+                            eps_end=0.0001, 
                             eps_decay=n_episodes-(n_episodes/3), 
-                            tau=0.001, 
+                            tau=400, 
                             lr=0.0005)
+    
+    dqn_trainer_adv = DQNTrainer(device=device, 
+                            n_observations=n_observations, 
+                            n_actions=n_actions,
+                            batch_size=256, 
+                            gamma=1, 
+                            eps_start=0.12, 
+                            eps_end=0.0001, 
+                            eps_decay=n_episodes-(n_episodes/3), 
+                            tau=400, 
+                            lr=0.0005)
+    
     nfsp_trainer = NFSPTrainer(device=device, 
                             n_observations=n_observations, 
                             n_actions=n_actions,
@@ -89,13 +101,18 @@ if __name__ == '__main__':
                             trainer=dqn_trainer, 
                             replay_memory_size=10000,
                             device=device)
+    
+    opponent_dqn = DQNTrainerPlayer(state_constructor=state_constructor_adv,
+                            trainer=dqn_trainer_adv, 
+                            replay_memory_size=10000,
+                            device=device)
 
     hero_nfsp = NFSPTrainerPlayer(state_constructor=state_constructor_player,
                             trainer=nfsp_trainer,
                             replay_memory_size=10000,
                             reservoir_memory_size=300000,
                             device=device)
-    
+
     opponent_nfsp = NFSPTrainerPlayer(state_constructor=state_constructor_adv,
                             trainer=nfsp_trainer_adv,
                             replay_memory_size=10000,
