@@ -56,7 +56,7 @@ class NFSPTrainer():
                         # second column on max result is index of where max element was
                         return self.policy_net(state).max(1).indices.view(1, 1), True #We return a true value if we're using epsilon greedy
                 else:
-                    return torch.tensor([[self.action_space.sample()]], device=self.device, dtype=torch.long), True #Is it really correct to sample a random action and return True anyway? It's not a best response
+                    return torch.tensor([[self.action_space.sample()]], device=self.device, dtype=torch.long), False #Is it really correct to sample a random action and return True anyway? It's not a best response
         else:
             with torch.no_grad():
                 q_values = self.behaviour_net(state)
