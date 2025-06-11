@@ -97,7 +97,7 @@ class DQNTrainer():
         self.optimizer.step()
 
 
-    def update_target_net(self):
+    def soft_update_target_net(self):
         # Soft update of the target network's weights
         # θ′ ← τ θ + (1 −τ )θ′
         target_net_state_dict = self.target_net.state_dict()
@@ -105,6 +105,11 @@ class DQNTrainer():
         for key in policy_net_state_dict:
             target_net_state_dict[key] = policy_net_state_dict[key]*self.tau + target_net_state_dict[key]*(1-self.tau)
         self.target_net.load_state_dict(target_net_state_dict)
+
+    
+    def hard_update_target_net(self):
+        self.target_net.load_state_dict(self.policy_net.state_dict())
+
 
     def save_model(self, policy_path='policy_net1.pth', target_path='target_net1.pth'):
         torch.save(self.policy_net.state_dict(), policy_path)

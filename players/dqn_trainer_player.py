@@ -11,7 +11,7 @@ class DQNTrainerPlayer():
         self.device = device
         self.last_action = None
         self.last_state = None
-
+        self.total_steps = 0
 
     def select_action(self, i, state_dict, player_seat):
         state = self.state_constructor.construct_state_continuous(state_dict, player_seat, False)
@@ -21,7 +21,9 @@ class DQNTrainerPlayer():
         return action
        
         
-    def play(self, i, state_dict, done, flops, reward, player_seat):
+    def play(self, i, state_dict, done, flops, reward, player_seat, update_mode='hard'):
+        self.total_steps += 1
+
         r = torch.tensor([reward[player_seat]], device=self.device)
         next_state = self.state_constructor.construct_state_continuous(state_dict, player_seat, done)
         # Store the transition in memory
@@ -31,7 +33,10 @@ class DQNTrainerPlayer():
 
         # Perform one step of the optimization (on the policy network)
         self.trainer.optimize_model(self.memory)
-        self.trainer.update_target_net()
+        if update_mode == 'hard' and self.total_steps % self.trainer.tau == 0:
+            self.trainer.hard_update_target_net()
+        elif update_mode == 'soft':
+            self.trainer.soft_update_target_net()
 
         if done:
             action = None
@@ -39,7 +44,7 @@ class DQNTrainerPlayer():
             self.last_state = None
         else:
             action = self.trainer.select_action(i, self.last_state) 
-            flops[i, 0] = 1 if action.item() == 0 else 0
+            flops[i, player_seat] = 1 if action.item() == 0 else 0
             self.last_action = action
-
+        
         return action, None
