@@ -44,7 +44,7 @@ class DQNTrainerPlayer():
             self.last_state = None
         else:
             action = self.trainer.select_action(i, self.last_state) 
-            flops[i, player_seat] = 1 if action.item() == 0 else 0
+            flops[i, 0] = 1 if action.item() == 0 else 0
             self.last_action = action
         
         return action, None
