@@ -14,13 +14,13 @@ class NNPlayer():
     def select_action(self, i, state_dict, player_seat, done):
         state = self.state_constructor.construct_state_continuous(state_dict, player_seat, done)
         #print_state(state, adv=True)
-        if self.mode == 'boltzmann':
+        if self.mode == 'boltzmann' and not done:
             with torch.no_grad():
                 q_values = self.policy_net(state)
                 probabilities = F.softmax(q_values, dim=1)
                 action = torch.multinomial(probabilities, 1)
                 return action.view(1, 1)
-        else:
+        elif not done:
             with torch.no_grad():
                 # t.max(1) will return the largest column value of each row.
                 # second column on max result is index of where max element was
@@ -31,9 +31,9 @@ class NNPlayer():
 
         
     def play(self, i, state_dict, done, flops, reward, player_seat):
+        action = self.select_action(i, state_dict, player_seat, done)
         if not done:
             last_phase = state_dict['current_round']
-            action = self.select_action(i, state_dict, player_seat, done) if not done else None
             #print("Action: ", action.item())
             flops[i, 1] = 1 if action.item() == 0 else 0
         else:

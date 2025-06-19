@@ -28,7 +28,7 @@ if __name__ == '__main__':
     "cpu"
     )
     
-    n_episodes = 100000
+    n_episodes = 80000
     n_observations = 14
     n_actions = 10
 
@@ -59,7 +59,7 @@ if __name__ == '__main__':
                             eps_decay=n_episodes-(n_episodes/3), 
                             tau=400, 
                             lr=0.0005)
-    
+                    
     dqn_trainer_adv = DQNTrainer(device=device, 
                             n_observations=n_observations, 
                             n_actions=n_actions,
@@ -128,7 +128,7 @@ if __name__ == '__main__':
     #adv = NNPlayer(policy_net=agent.policy_net, policy_net_name="policy_2.0.pth", device=device)
     episode_reward, flops, empty_hands = training_loop(env, 
                                                         hero = hero_dqn,
-                                                        opponent = RandomPlayer(device=device),
+                                                        opponent = NNPlayer(state_constructor=state_constructor_adv, policy_net=BaseNetwork(n_observations, n_actions).to(device), policy_net_name="nfsp_run/behaviour_nfsp_10k.pth", device=device, mode='max'),
                                                         num_episodes = n_episodes, 
                                                         version_name="nfsp")
     

@@ -13,6 +13,7 @@ def plot_rewards(data, smoothing_window):
     plt.xlabel('Episode')
     plt.ylabel('Reward')
     plt.title('Episode Reward Over Time')
+    plt.legend(loc='upper right')
     plt.show()
 
 def plot_sum(data1, data2, window_size, title, y_label):
@@ -21,12 +22,14 @@ def plot_sum(data1, data2, window_size, title, y_label):
     plt.xlabel('Episode')
     plt.ylabel(y_label)
     plt.title(title)
+    plt.legend(loc='upper right')
     plt.show()
 
 def plot_average(data1, data2, window_size, title, y_label):
     plt.plot(moving_average(data1, window_size), label='Smoothed RL player', color='red')
     plt.plot(moving_average(data2, window_size), label='Smoothed Adv player', color='blue')
-    plt.xlabel('Episode')
+    plt.xlabel('Episode')                                      
     plt.ylabel(y_label)
     plt.title(title)
+    plt.legend(loc='upper right')
     plt.show()           
