@@ -4,7 +4,7 @@ import torch.nn.functional as F
 from memories import ReplayMemory, ReservoirMemory
 
 class NFSPTrainerPlayer():
-    def __init__(self, state_constructor, trainer, replay_memory_size, reservoir_memory_size, device):
+    def __init__(self, state_constructor, trainer, replay_memory_size, reservoir_memory_size, device, is_hero=False):
         self.device = device
         
         self.state_constructor = state_constructor
@@ -14,10 +14,11 @@ class NFSPTrainerPlayer():
         self.last_action = None
         self.last_state = None
         self.total_steps = 0
+        self.is_hero = 0 if is_hero else 1
 
 
-    def select_action(self, i, state_dict, player_seat):
-        state = self.state_constructor.construct_state_continuous(state_dict, player_seat, False)
+    def select_action(self, i, state_dict, player_seat, done):
+        state = self.state_constructor.construct_state_continuous(state_dict, player_seat, done)
         action, best_response = self.trainer.select_action(i, state)
         self.last_action = action
         self.last_state = state
@@ -52,7 +53,7 @@ class NFSPTrainerPlayer():
             action, best_response = self.trainer.select_action(i, next_state) 
             if best_response:
                 self.average_policy_memory.push(next_state, action)
-            flops[i, player_seat] = 1 if action.item() == 0 else 0
+            flops[i, self.is_hero] = 1 if action.item() == 0 else 0
 
         self.last_action = action
 

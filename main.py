@@ -59,7 +59,7 @@ if __name__ == '__main__':
                             eps_decay=n_episodes-(n_episodes/3), 
                             tau=400, 
                             lr=0.0005)
-                    
+
     dqn_trainer_adv = DQNTrainer(device=device, 
                             n_observations=n_observations, 
                             n_actions=n_actions,
@@ -100,7 +100,8 @@ if __name__ == '__main__':
     hero_dqn = DQNTrainerPlayer(state_constructor=state_constructor_player,
                             trainer=dqn_trainer, 
                             replay_memory_size=10000,
-                            device=device)
+                            device=device,
+                            is_hero=True)
     
     opponent_dqn = DQNTrainerPlayer(state_constructor=state_constructor_adv,
                             trainer=dqn_trainer_adv, 
@@ -111,7 +112,8 @@ if __name__ == '__main__':
                             trainer=nfsp_trainer,
                             replay_memory_size=10000,
                             reservoir_memory_size=200000,
-                            device=device)
+                            device=device,
+                            is_hero=True)
 
     opponent_nfsp = NFSPTrainerPlayer(state_constructor=state_constructor_adv,
                             trainer=nfsp_trainer_adv,
@@ -128,7 +130,7 @@ if __name__ == '__main__':
     #adv = NNPlayer(policy_net=agent.policy_net, policy_net_name="policy_2.0.pth", device=device)
     episode_reward, flops, empty_hands = training_loop(env, 
                                                         hero = hero_dqn,
-                                                        opponent = NNPlayer(state_constructor=state_constructor_adv, policy_net=BaseNetwork(n_observations, n_actions).to(device), policy_net_name="nfsp_run/behaviour_nfsp_10k.pth", device=device, mode='max'),
+                                                        opponent = NNPlayer(state_constructor=state_constructor_adv, policy_net=BaseNetwork(n_observations, n_actions).to(device), policy_net_name="nfsp_run/behaviour_nfsp_110k.pth", device=device, mode='max'),
                                                         num_episodes = n_episodes, 
                                                         version_name="nfsp")
     

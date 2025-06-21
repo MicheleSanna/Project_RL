@@ -114,10 +114,17 @@ class DQNTrainer():
     def save_model(self, policy_path='policy_net1.pth', target_path='target_net1.pth'):
         torch.save(self.policy_net.state_dict(), policy_path)
         torch.save(self.target_net.state_dict(), target_path)
-        print("SAVED!")
+        print("SAVED!", get_param_norm(self.policy_net))
 
     def load_model(self, policy_path='policy_net.pth', target_path='target_net.pth'):
         self.policy_net.load_state_dict(torch.load(policy_path))
         self.target_net.load_state_dict(torch.load(target_path))
         print("LOADED!")
 
+def get_param_norm(net, p=2):
+    """Returns the norm of the parameters of the policy_net."""
+    total_norm = 0.0
+    for param in net.parameters():
+        if param.requires_grad:
+            total_norm += param.data.norm(p).item() ** p
+    return total_norm ** (1. / p)
