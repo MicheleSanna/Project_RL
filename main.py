@@ -28,7 +28,7 @@ if __name__ == '__main__':
     "cpu"
     )
     
-    n_episodes = 80000
+    n_episodes = 150000
     n_observations = 14
     n_actions = 10
 
@@ -71,6 +71,7 @@ if __name__ == '__main__':
                             tau=400, 
                             lr=0.0005)
     
+    
     nfsp_trainer = NFSPTrainer(device=device, 
                             n_observations=n_observations, 
                             n_actions=n_actions,
@@ -107,32 +108,35 @@ if __name__ == '__main__':
                             trainer=dqn_trainer_adv, 
                             replay_memory_size=10000,
                             device=device)
+    
+    nfsp_trainer.load_model(policy_path="nfsp_run_short/policy_nfsp_0th.pth", target_path="nfsp_run_short/policy_nfsp_0th.pth")
+    nfsp_trainer_adv.load_model(policy_path="nfsp_run_short/policy_nfsp_0th.pth", target_path="nfsp_run_short/policy_nfsp_0th.pth")
 
     hero_nfsp = NFSPTrainerPlayer(state_constructor=state_constructor_player,
                             trainer=nfsp_trainer,
                             replay_memory_size=10000,
-                            reservoir_memory_size=200000,
+                            reservoir_memory_size=100000,
                             device=device,
                             is_hero=True)
 
     opponent_nfsp = NFSPTrainerPlayer(state_constructor=state_constructor_adv,
                             trainer=nfsp_trainer_adv,
                             replay_memory_size=10000,
-                            reservoir_memory_size=200000,
+                            reservoir_memory_size=100000,
                             device=device)
     
     #opponent_nn_policy = NNPlayer(state_constructor=state_constructor_adv, policy_net=BaseNetwork(n_observations, n_actions).to(device), policy_net_name="policy_4.0.pth", device=device)
 
 
-
+    
     start = time.time()
     print(device)
     #adv = NNPlayer(policy_net=agent.policy_net, policy_net_name="policy_2.0.pth", device=device)
     episode_reward, flops, empty_hands = training_loop(env, 
                                                         hero = hero_dqn,
-                                                        opponent = NNPlayer(state_constructor=state_constructor_adv, policy_net=BaseNetwork(n_observations, n_actions).to(device), policy_net_name="nfsp_run/behaviour_nfsp_110k.pth", device=device, mode='max'),
+                                                        opponent = opponent_dqn,
                                                         num_episodes = n_episodes, 
-                                                        version_name="nfsp")
+                                                        version_name="dqn")
     
     reward_averages = np.zeros(n_episodes//100)
     for i in range(0, n_episodes, 100):
@@ -140,7 +144,7 @@ if __name__ == '__main__':
     print("Time elapsed: ", time.time()-start)
     print("Avg mbb per hand: ", (sum(episode_reward)/len(episode_reward))*200)
     plot_rewards(reward_averages, 100)
-    plot_sum(flops[:, 0], flops[:, 1], 2500, title='Average flops per 100 episodes', y_label='flops')
+    plot_sum(flops[:, 0], flops[:, 1], 2500, title='Average folds per 2500 episodes', y_label='Folds')
     plot_sum(empty_hands, empty_hands, 2500, title='Empty hands', y_label='hands')
 
 
