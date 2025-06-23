@@ -30,6 +30,7 @@ class StateConstructor():
             self.adv_bet_history[1] = 0
             self.adv_bet_history[2] = 0
             self.adv_bet_history[3] = 0
+            self.last_game_phase = -1
             return None
         stack = state_dict['seats'][current_player]['stack'] * self.initial_stack_inv
         adv_stack = state_dict['seats'][current_player-1]['stack'] * self.initial_stack_inv

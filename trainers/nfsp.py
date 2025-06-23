@@ -153,10 +153,11 @@ class NFSPTrainer():
         print("SAVED!")
 
     
-    def load_model(self, policy_path='policy_net.pth', target_path='target_net.pth', behaviour_path='behaviour_net.pth'):
+    def load_model(self, policy_path='policy_net.pth', target_path='target_net.pth', behaviour_path=None):
         self.policy_net.load_state_dict(torch.load(policy_path))
         self.target_net.load_state_dict(torch.load(target_path))
-        self.behaviour_net.load_state_dict(torch.load(behaviour_path))
+        if behaviour_path is not None:
+            self.behaviour_net.load_state_dict(torch.load(behaviour_path))
         print("LOADED!")
 
         

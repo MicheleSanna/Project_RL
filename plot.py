@@ -17,8 +17,8 @@ def plot_rewards(data, smoothing_window):
     plt.show()
 
 def plot_sum(data1, data2, window_size, title, y_label):
-    plt.plot(moving_sum(data1, window_size), label='Smoothed RL player', color='red')
-    plt.plot(moving_sum(data2, window_size), label='Smoothed Adv player', color='blue')
+    plt.plot(moving_sum(data1, window_size), label='Hero', color='red')
+    plt.plot(moving_sum(data2, window_size), label='Opponent', color='blue')
     plt.xlabel('Episode')
     plt.ylabel(y_label)
     plt.title(title)
