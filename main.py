@@ -28,7 +28,7 @@ if __name__ == '__main__':
     "cpu"
     )
     
-    n_episodes = 150000
+    n_episodes = 100000
     n_observations = 14
     n_actions = 10
 
@@ -109,8 +109,8 @@ if __name__ == '__main__':
                             replay_memory_size=10000,
                             device=device)
     
-    nfsp_trainer.load_model(policy_path="nfsp_run_short/policy_nfsp_0th.pth", target_path="nfsp_run_short/policy_nfsp_0th.pth")
-    nfsp_trainer_adv.load_model(policy_path="nfsp_run_short/policy_nfsp_0th.pth", target_path="nfsp_run_short/policy_nfsp_0th.pth")
+    #dqn_trainer.load_model(policy_path="nfsp_run_short/policy_nfsp_0th.pth", target_path="nfsp_run_short/policy_nfsp_0th.pth")
+    #dqn_trainer_adv.load_model(policy_path="nfsp_run_short/policy_nfsp_0th.pth", target_path="nfsp_run_short/policy_nfsp_0th.pth")
 
     hero_nfsp = NFSPTrainerPlayer(state_constructor=state_constructor_player,
                             trainer=nfsp_trainer,
@@ -131,10 +131,11 @@ if __name__ == '__main__':
     
     start = time.time()
     print(device)
+
     #adv = NNPlayer(policy_net=agent.policy_net, policy_net_name="policy_2.0.pth", device=device)
     episode_reward, flops, empty_hands = training_loop(env, 
-                                                        hero = hero_dqn,
-                                                        opponent = opponent_dqn,
+                                                        hero = NNPlayer(state_constructor=state_constructor_adv, policy_net=BaseNetwork(n_observations, n_actions).to(device), policy_net_name="dqn_run_150/target_dqn_110k.pth", device=device, mode='max', is_hero=True),
+                                                        opponent = NNPlayer(state_constructor=state_constructor_adv, policy_net=BaseNetwork(n_observations, n_actions).to(device), policy_net_name="nfsp_run_150/target_nfsp_120k.pth", device=device, mode='max'),
                                                         num_episodes = n_episodes, 
                                                         version_name="dqn")
     
@@ -151,10 +152,4 @@ if __name__ == '__main__':
 
 
 
-
-
-
-
-# This is a test script to run the environment and print the state dictionary
-
-    
+# This is a test script to run the environment and print the state dictionary   

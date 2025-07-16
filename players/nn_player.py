@@ -3,12 +3,13 @@ import torch.nn as nn
 import torch.nn.functional as F
 
 class NNPlayer():
-    def __init__(self, state_constructor, policy_net, policy_net_name, mode, device):
+    def __init__(self, state_constructor, policy_net, policy_net_name, mode, device, is_hero=False):
         self.policy_net = policy_net.to(device)
         self.mode = mode
         self.device = device
         self.state_constructor = state_constructor
         self.policy_net.load_state_dict(torch.load(policy_net_name))
+        self.is_hero = 0 if is_hero else 1
         print("LOADED: ", get_param_norm(self.policy_net))
 
     def select_action(self, i, state_dict, player_seat, done):
@@ -35,7 +36,7 @@ class NNPlayer():
         if not done:
             last_phase = state_dict['current_round']
             #print("Action: ", action.item())
-            flops[i, 1] = 1 if action.item() == 0 else 0
+            flops[i, self.is_hero] = 1 if action.item() == 0 else 0
         else:
             action = None
             last_phase = None
