@@ -5,7 +5,7 @@ import numpy as np
 import random
 from tools.helper import get_config
 from tools.helper import init_logger
-from game.games import NoLimitHoldem
+from PokerRL.game.games import NoLimitHoldem
 import time
 from state_constructor import StateConstructor
 from matplotlib import pyplot as plt
@@ -134,8 +134,8 @@ if __name__ == '__main__':
 
     #adv = NNPlayer(policy_net=agent.policy_net, policy_net_name="policy_2.0.pth", device=device)
     episode_reward, flops, empty_hands = training_loop(env, 
-                                                        hero = NNPlayer(state_constructor=state_constructor_adv, policy_net=BaseNetwork(n_observations, n_actions).to(device), policy_net_name="dqn_run_150/target_dqn_110k.pth", device=device, mode='max', is_hero=True),
-                                                        opponent = NNPlayer(state_constructor=state_constructor_adv, policy_net=BaseNetwork(n_observations, n_actions).to(device), policy_net_name="nfsp_run_150/target_nfsp_120k.pth", device=device, mode='max'),
+                                                        hero = hero_dqn,
+                                                        opponent = RandomPlayer(device=device, type='random'),
                                                         num_episodes = n_episodes, 
                                                         version_name="dqn")
     

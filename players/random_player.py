@@ -20,12 +20,14 @@ class RandomPlayer():
         elif type == 'no-fold':
             return [0, 1, 1, 1, 1, 1, 1, 1, 1, 1]
         elif type == 'better':
-            return [0, 1, 1, 1, 1, 1, 1, 1, 0, 0]
+            return [0, 1, 1, 1, 1, 1, 0, 0, 0, 0]
         elif type == 'all-in':
             return [0, 0, 0, 0, 0, 0, 0, 0, 0, 1]
         elif type == 'aggressive':
             return [0, 0.5, 1.5, 2.5, 3.5, 4.5, 5.5, 6.5, 0, 0]
         elif type == 'folder':
             return [1, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+        elif type == 'checker':
+            return [0, 1, 0, 0, 0, 0, 0, 0, 0, 0]
         else:
             raise ValueError("Unknown player type")

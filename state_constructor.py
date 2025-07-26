@@ -64,7 +64,7 @@ class StateConstructor():
         #print(f"Player {current_player} state: {state_array.unsqueeze(0)}")
         return state_array.unsqueeze(0)
     
-    
+    #This function was made with the idea of using it with a tabular algorithm, so it bins all the values
     def construct_state_bin(self, state_dict, current_player):
         stack = state_dict['seats'][current_player]['stack']
         game_phase = state_dict['current_round']
