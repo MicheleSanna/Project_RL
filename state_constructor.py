@@ -2,9 +2,7 @@ import numpy as np
 from tools.montecarlo_numpy2 import Evaluation
 #import cppimport
 import torch
-import time
 from multiprocessing import Pool
-from multiprocessing import Process, Queue
 
 #calculator = cppimport.imp("tools.montecarlo_cpp.pymontecarlo")
 E = Evaluation()

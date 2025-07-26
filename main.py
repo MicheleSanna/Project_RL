@@ -1,8 +1,5 @@
-import logging
 import torch
-import gym
 import numpy as np
-import random
 from tools.helper import get_config
 from tools.helper import init_logger
 from PokerRL.game.games import NoLimitHoldem
@@ -15,7 +12,6 @@ from players.random_player import RandomPlayer
 from players.dqn_trainer_player import DQNTrainerPlayer
 from players.nfsp_trainer_player import NFSPTrainerPlayer
 from plot import plot_rewards, plot_sum
-from performance_tracker import PerformanceTracker
 from trainers.nfsp import NFSPTrainer
 from training_loop import training_loop
 
@@ -147,9 +143,3 @@ if __name__ == '__main__':
     plot_rewards(reward_averages, 100)
     plot_sum(flops[:, 0], flops[:, 1], 2500, title='Average folds per 2500 episodes', y_label='Folds')
     plot_sum(empty_hands, empty_hands, 2500, title='Empty hands', y_label='hands')
-
-
-
-
-
-# This is a test script to run the environment and print the state dictionary   
